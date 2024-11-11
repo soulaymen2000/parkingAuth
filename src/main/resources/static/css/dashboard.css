@@ -1,0 +1,18 @@
+/* External CSS for GPS Tracking Dashboard */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif; /* Clean font */
+}
+
+
+
+/* Footer Styles */
+.footer {
+    background-color: #343a40; /* Dark background for footer */
+    color: white; /* White text */
+    text-align: center; /* Centered text */
+    padding: 10px 0; /* Padding for footer */
+    position: relative; /* Position relative for better layout */
+}

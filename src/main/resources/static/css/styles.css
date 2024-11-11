@@ -1,0 +1,142 @@
+/* External CSS for GPS Tracking */
+
+html, body {
+    height: 100%; /* Ensure body takes full height */
+    margin: 0; /* Remove default margin */
+}
+
+body {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack items vertically */
+}
+
+.container {
+    flex: 1; /* Take remaining space */
+}
+
+.hero {
+    position: relative;
+    color: white;
+    padding: 100px 0;
+    text-align: center;
+    overflow: hidden; /* Prevent overflow */
+}
+
+.hero video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: 1;
+    opacity: 0.5; /* Adjust opacity for text visibility */
+    transform: translate(-50%, -50%);
+}
+
+.hero h1 {
+    font-size: 4rem;
+    font-weight: bold;
+    animation: fadeInDown 1s;
+    position: relative; /* Position relative for z-index */
+    z-index: 2; /* Bring text above the video */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8); /* Add shadow for better readability */
+}
+
+.hero p {
+    font-size: 1.5rem;
+    animation: fadeIn 2s;
+    position: relative; /* Position relative for z-index */
+    z-index: 2; /* Bring text above the video */
+}
+
+.btn-primary {
+    margin-top: 20px;
+    animation: bounceIn 2.5s;
+    position: relative; /* Position relative for z-index */
+    z-index: 2; /* Bring button above the video */
+    border-radius: 30px; /* Rounded button */
+    padding: 10px 30px; /* Button padding */
+    font-size: 1.2rem; /* Larger font size */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: scale(1.05); /* Slight grow effect on hover */
+    transition: all 0.3s ease; /* Smooth transition */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+
+.Hfooter {
+    margin-top: auto; /* Push footer to the bottom */
+    background-color: #343a40; /* Dark background for footer */
+    color: white; /* White text color for footer */
+    text-align: center; /* Centered text */
+    height: 40px; /* Fixed height for footer */
+    line-height: 40px; /* Vertically center the text */
+    font-size: 0.8rem; /* Adjust font size for better fit */
+}
+.dashboard-container {
+    display: flex; /* Use flexbox for layout */
+    height: 100vh; /* Full viewport height */
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background-color: #f8f9fa; /* Light background */
+    color: #333; /* Dark text */
+    width: 250px; /* Fixed width for sidebar */
+    padding: 20px; /* Padding around content */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    overflow-y: auto; /* Scroll if content overflows */
+}
+
+.sidebar h2 {
+    margin-top: 20px; /* Space above heading */
+}
+
+.sidebar ul {
+    list-style: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+}
+
+.sidebar li {
+    margin: 10px 0; /* Space between items */
+}
+
+.sidebar p {
+    margin: 5px 0; /* Space for vehicle items */
+}
+
+/* Main Content Styles */
+.main-content {
+    flex: 1; /* Take remaining space */
+    padding: 20px; /* Padding for main content */
+    display: flex; /* Align items */
+    flex-direction: column; /* Vertical layout */
+}
+
+.map-section {
+    height: 500px; /* Set height for the map */
+    border-radius: 10px; /* Rounded corners */
+    margin-top: 20px; /* Space above map */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+
