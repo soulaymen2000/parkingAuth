@@ -6,7 +6,6 @@ public class RegisterUserDto {
     private String email;
     private String password;
     private String fullName;
-    private String company; // Add company field
     private Role role;
 
     public String getEmail() {
@@ -31,14 +30,6 @@ public class RegisterUserDto {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
-    }
-
-    public String getCompany() {
-        return company; // Getter for company
-    }
-
-    public void setCompany(String company) {
-        this.company = company; // Setter for company
     }
 
     public Role getRole() {

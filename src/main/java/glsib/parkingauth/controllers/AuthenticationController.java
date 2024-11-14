@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/auth")
@@ -101,7 +102,7 @@ public class AuthenticationController {
         try {
             User registeredUser = authenticationService.signup(registerUserDto);
             model.addAttribute("user", registeredUser);
-            return "login"; // Return success view after registration
+            return "redirect:/auth/login"; // Return success view after registration
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             return "signup"; // Return the signup view with error message
@@ -121,9 +122,32 @@ public class AuthenticationController {
     }
 
     @PostMapping("/profile/edit")
-    public String updateProfile(@ModelAttribute("user") User user, RedirectAttributes redirectAttributes) {
-        userService.save(user);
+    public String updateProfile(@ModelAttribute("user") User user, RedirectAttributes redirectAttributes, Principal principal) {
+        String email = principal.getName();  // Get the logged-in user's email
+        User currentUser = userService.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Check if the email is being updated
+        if (user.getEmail() != null && !user.getEmail().equals(currentUser.getEmail())) {
+            Optional<User> existingUser = userService.findByEmail(user.getEmail());
+            if (existingUser.isPresent()) {
+                redirectAttributes.addFlashAttribute("error", "Email is already in use.");
+                return "redirect:/auth/profile/edit";
+            }
+            // Update email only if it's not already in use
+            currentUser.setEmail(user.getEmail());
+        }
+
+        // Update other fields as needed
+        currentUser.setFullName(user.getFullName()); // Update full name
+        if (user.getRole() != null) {
+            currentUser.setRole(user.getRole());  // Update role only if a new role is provided
+        }
+
+        // Save the updated user data
+        userService.save(currentUser);
         redirectAttributes.addFlashAttribute("success", "Profile updated successfully");
         return "redirect:/auth/profile/edit";
     }
+
 }
