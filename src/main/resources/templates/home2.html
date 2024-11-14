@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Map</title>
+    <script src="https://maps.gomaps.pro/maps/api/js?key=AlzaSyoHzeVrEcTuZehYbvYwJegoAgjhO5aCppn"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<h1>Parking Map</h1>
+<div id="map"></div>
+
+<script>
+    function initMap() {
+        const center = { lat: 36.8065, lng: 10.1815 };  // Example coordinates for Tunis
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: center
+        });
+
+        // Add a marker for a parking location (this will be dynamic later)
+        const marker = new google.maps.Marker({
+            position: { lat: 36.8065, lng: 10.1815 },
+            map: map,
+            title: "Parking 1"
+        });
+    }
+
+    window.onload = initMap;
+</script>
+</body>
+</html>
