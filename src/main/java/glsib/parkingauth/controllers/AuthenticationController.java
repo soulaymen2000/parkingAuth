@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,13 +28,15 @@ public class AuthenticationController {
 
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
-    private final UserService userService; // Added UserService
+    private final UserService userService;// Added UserService
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService, UserService userService) {
+    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService, UserService userService, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
         this.userService = userService; // Inject UserService
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/login")
@@ -142,6 +145,12 @@ public class AuthenticationController {
         currentUser.setFullName(user.getFullName()); // Update full name
         if (user.getRole() != null) {
             currentUser.setRole(user.getRole());  // Update role only if a new role is provided
+        }
+
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            // Hash the new password before saving
+            String encodedPassword = passwordEncoder.encode(user.getPassword());
+            currentUser.setPassword(encodedPassword);
         }
 
         // Save the updated user data
