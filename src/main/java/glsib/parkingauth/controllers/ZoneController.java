@@ -1,6 +1,6 @@
-package glsib.parkingauth.configs;
+package glsib.parkingauth.controllers;
 
-import glsib.parkingauth.dtos.ZoneService;
+import glsib.parkingauth.services.ZoneService;
 import glsib.parkingauth.entities.Zone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

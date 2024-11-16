@@ -1,8 +1,10 @@
 package glsib.parkingauth.controllers;
 
+import glsib.parkingauth.dtos.CreateTableDto;
 import glsib.parkingauth.dtos.RegisterUserDto;
 import glsib.parkingauth.entities.User;
 import glsib.parkingauth.dtos.LoginUserDto;
+import glsib.parkingauth.entities.Zone;
 import glsib.parkingauth.services.AuthenticationService;
 import glsib.parkingauth.services.JwtService;
 import glsib.parkingauth.services.UserService;
@@ -158,5 +160,27 @@ public class AuthenticationController {
         redirectAttributes.addFlashAttribute("success", "Profile updated successfully");
         return "redirect:/auth/profile/edit";
     }
+
+    @GetMapping("/create")
+    public String showCreateForm(Model model) {
+        model.addAttribute("createTableDto", new CreateTableDto());
+        return "create-park";
+    }
+
+    @PostMapping("/create")
+    public String createZone(@ModelAttribute("createTableDto") CreateTableDto createTableDto, Model model) {
+        try {
+            Zone createdZone = authenticationService.createZone(createTableDto);
+            model.addAttribute("zone", createdZone);
+            return "redirect:/admin"; // Return success view after registration
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "create-park"; // Return the signup view with error message
+        } catch (Exception e) {
+            model.addAttribute("error", "An unexpected error occurred. Please try again.");
+            return "create-park"; // Return the signup view with error message
+        }
+    }
+
 
 }

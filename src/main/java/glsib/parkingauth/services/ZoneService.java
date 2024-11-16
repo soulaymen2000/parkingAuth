@@ -1,4 +1,4 @@
-package glsib.parkingauth.dtos;
+package glsib.parkingauth.services;
 
 import glsib.parkingauth.entities.Zone;
 import glsib.parkingauth.repositories.ZoneRepository;
