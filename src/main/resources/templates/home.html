@@ -4,12 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Dashboard - Parking</title>
-
-
-
-  <!-- Corrected Google Maps API URL -->
   <script src="https://maps.gomaps.pro/maps/api/js?key=AlzaSyoHzeVrEcTuZehYbvYwJegoAgjhO5aCppn"></script>
-
   <style>
     #map {
       height: 500px;
@@ -29,9 +24,12 @@
     .widget.active {
       display: block;
     }
+    .btn-disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
   </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/styles.css"> <!-- Link to compiled CSS -->
 </head>
 <body>
 
@@ -59,6 +57,7 @@
     </div>
   </div>
 </nav>
+
 <!-- Dashboard Section -->
 <section class="container my-5">
   <h1 class="text-center mb-4">Welcome to Your Dashboard</h1>
@@ -77,9 +76,12 @@
   <p id="zone-price"></p>
   <p id="zone-total-spots"></p>
   <p id="zone-available-spots"></p>
+  <button id="reserve-button" class="btn btn-primary btn-disabled">Reserve</button>
 </div>
 
 <script>
+  let selectedZone = null;
+
   // Fetch zones from backend
   async function fetchZones() {
     try {
@@ -111,11 +113,22 @@
 
         // Show widget with zone details when a marker is clicked
         google.maps.event.addListener(marker, 'click', function() {
+          selectedZone = zone; // Store the selected zone
           document.getElementById('widget').classList.add('active');
           document.getElementById('zone-description').innerText = `Description: ${zone.description}`;
           document.getElementById('zone-price').innerText = `Price: ${zone.price} TND`;
           document.getElementById('zone-total-spots').innerText = `Total Spots: ${zone.totalSpots}`;
           document.getElementById('zone-available-spots').innerText = `Available Spots: ${zone.availableSpots}`;
+
+          // Enable or disable the reserve button
+          const reserveButton = document.getElementById('reserve-button');
+          if (zone.availableSpots > 0) {
+            reserveButton.classList.remove('btn-disabled');
+            reserveButton.disabled = false;
+          } else {
+            reserveButton.classList.add('btn-disabled');
+            reserveButton.disabled = true;
+          }
         });
       });
     });
@@ -155,7 +168,42 @@
     }
   }
 
-  window.onload = initMap;  // Initialize the map when the page loads
+  // Handle "Reserve" button click
+  document.getElementById('reserve-button').addEventListener('click', async function() {
+    if (!selectedZone) return;
+
+    try {
+      const response = await fetch(`http://localhost:1234/api/zones/reserve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ description: selectedZone.description })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reserve spot');
+      }
+
+      // Update available spots
+      const updatedZone = await response.json();
+      document.getElementById('zone-available-spots').innerText = `Available Spots: ${updatedZone.availableSpots}`;
+      selectedZone.availableSpots = updatedZone.availableSpots;
+
+      // Disable the button if no spots are left
+      if (updatedZone.availableSpots =  0) {
+        document.getElementById('reserve-button').classList.add('btn-disabled');
+        document.getElementById('reserve-button').disabled = true;
+      }
+
+      alert('Reservation successful!');
+    } catch (error) {
+      console.error('Error reserving spot:', error);
+      alert('Failed to reserve spot. Please try again.');
+    }
+  });
+
+  window.onload = initMap; // Initialize the map when the page loads
 </script>
 
 <!-- Footer -->
