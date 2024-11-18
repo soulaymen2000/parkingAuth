@@ -1,5 +1,6 @@
 package glsib.parkingauth.controllers;
 
+import glsib.parkingauth.dtos.CoordinatesDto;
 import glsib.parkingauth.dtos.CreateTableDto;
 import glsib.parkingauth.dtos.RegisterUserDto;
 import glsib.parkingauth.entities.User;
@@ -8,6 +9,7 @@ import glsib.parkingauth.entities.Zone;
 import glsib.parkingauth.services.AuthenticationService;
 import glsib.parkingauth.services.JwtService;
 import glsib.parkingauth.services.UserService;
+import glsib.parkingauth.services.ZoneService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +17,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.Date;
 import java.util.Optional;
 
 @Controller
@@ -32,13 +32,15 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;// Added UserService
     private final PasswordEncoder passwordEncoder;
+    private final ZoneService zoneService;
 
     @Autowired
-    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService, UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService, UserService userService, PasswordEncoder passwordEncoder, ZoneService zoneService) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
         this.userService = userService; // Inject UserService
         this.passwordEncoder = passwordEncoder;
+        this.zoneService = zoneService;
     }
 
     @GetMapping("/login")
@@ -181,6 +183,78 @@ public class AuthenticationController {
             return "create-park"; // Return the signup view with error message
         }
     }
+
+    @GetMapping("/update")
+    public String showUpdateForm(Model model) {
+        model.addAttribute("coordinatesDto", new CoordinatesDto());
+        return "update-park"; // A form to enter latitude and longitude
+    }
+
+
+    @PostMapping("/update")
+    public String processUpdateForm(@ModelAttribute("coordinatesDto") CoordinatesDto coordinatesDto, Model model) {
+        double latitude = coordinatesDto.getLatitude();
+        double longitude = coordinatesDto.getLongitude();
+
+        // Check if the zone exists
+        Optional<Zone> optionalZone = zoneService.findByLatitudeAndLongitude(latitude, longitude);
+
+        if (optionalZone.isPresent()) {
+            // Add the zone to the model and redirect to the update zone page
+            model.addAttribute("zone", optionalZone.get());
+            return "update-zone"; // Page for updating the zone
+        } else {
+            // Add error message and reload the form
+            model.addAttribute("error", "Zone with specified coordinates not found.");
+            return "update-park";
+        }
+    }
+
+    @GetMapping("/update/zone")
+    public String showZoneUpdateForm(@RequestParam(value = "latitude", required = false) Double latitude,
+                                     @RequestParam(value = "longitude", required = false) Double longitude,
+                                     Model model) {
+
+        if (latitude != null && longitude != null) {
+            try {
+                Zone zone = zoneService.findByLatitudeAndLongitude(latitude, longitude)
+                        .orElseThrow(() -> new IllegalArgumentException("Zone not found"));
+
+                model.addAttribute("zone", zone); // Add the zone object to the model for pre-filling the form
+            } catch (Exception e) {
+                model.addAttribute("error", "Zone not found. Please try again.");
+            }
+        }
+
+        return "update-zone"; // Returns the Thymeleaf template for updating the zone
+    }
+
+
+    @PostMapping("/update/zone")
+    public String updateZone(@ModelAttribute("coordinatesDto") CoordinatesDto coordinatesDto, Model model) {
+
+
+        double latitude = coordinatesDto.getLatitude();
+        double longitude = coordinatesDto.getLongitude();
+
+        Date currentDate = new Date();
+        try {
+            Zone zone = zoneService.findByLatitudeAndLongitude(latitude, longitude)
+                    .orElseThrow(() -> new IllegalArgumentException("Zone not found"));
+
+            // Update zone details
+            zone.setTotalSpots(zone.getTotalSpots());
+            zone.setAvailableSpots(zone.getAvailableSpots());
+            zone.setUpdatedAt(currentDate);
+            zoneService.saveZone(zone);
+
+            return "redirect:/admin"; // Redirect to the admin page on success
+        } catch (Exception e) {
+            model.addAttribute("error", "An unexpected error occurred. Please try again.");
+            return "update-zone"; // Stay on the update page in case of error
+        }
+    }
+
 
 
 }

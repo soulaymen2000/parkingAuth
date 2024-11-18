@@ -5,6 +5,7 @@ import glsib.parkingauth.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ZoneService {
@@ -27,4 +28,7 @@ public class ZoneService {
     public void deleteZone(Long id) {
         zoneRepository.deleteById(id);
     }
+
+    public Optional<Zone> findByLatitudeAndLongitude(double latitude, double longitude) {return zoneRepository.findByLatitudeAndLongitude(latitude, longitude);}
+
 }

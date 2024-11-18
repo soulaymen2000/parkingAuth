@@ -73,7 +73,7 @@ public class AuthenticationService {
     }
 
     public Zone createZone(CreateTableDto input) {
-        logger.info("Attempting to sign up user with longitude and latitude: {}", input.getLongitude(), input.getLatitude());
+        logger.info("Attempting to create park with longitude and latitude: {}", input.getLongitude(), input.getLatitude());
 
         if (zoneRepository.findByLatitude(input.getLatitude()).isPresent() && zoneRepository.findByLongitude(input.getLongitude()).isPresent()) {
             logger.warn("Parking already exists: {}", input.getLongitude(), input.getLatitude());

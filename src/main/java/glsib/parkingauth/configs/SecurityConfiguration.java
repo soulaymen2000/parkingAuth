@@ -35,7 +35,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/landing").permitAll()
-                        .requestMatchers("/admin/**").hasAuthority("ADMIN") // Only ADMIN can access these endpoints
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN")// Only ADMIN can access these endpoints
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated() // Require authentication for all other requests
                 )
