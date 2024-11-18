@@ -13,4 +13,6 @@ public interface ZoneRepository extends JpaRepository<Zone, Long> {
     Optional<Zone> findByLongitude(double longitude);
 
     Optional<Zone> findByLatitudeAndLongitude(double latitude, double longitude);
+
+    Zone findByDescription(String description);
 }
