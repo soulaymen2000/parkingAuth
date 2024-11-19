@@ -210,49 +210,97 @@ public class AuthenticationController {
         }
     }
 
-    @GetMapping("/update/zone")
-    public String showZoneUpdateForm(@RequestParam(value = "latitude", required = false) Double latitude,
-                                     @RequestParam(value = "longitude", required = false) Double longitude,
-                                     Model model) {
-
-        if (latitude != null && longitude != null) {
-            try {
-                Zone zone = zoneService.findByLatitudeAndLongitude(latitude, longitude)
-                        .orElseThrow(() -> new IllegalArgumentException("Zone not found"));
-
-                model.addAttribute("zone", zone); // Add the zone object to the model for pre-filling the form
-            } catch (Exception e) {
-                model.addAttribute("error", "Zone not found. Please try again.");
-            }
+    @GetMapping("/update/zone/{zoneId}")
+    public String showZoneUpdateForm(@PathVariable Long zoneId, Model model) {
+        Optional<Zone> optionalZone = zoneService.findById(zoneId);
+        if (optionalZone.isPresent()) {
+            model.addAttribute("zone", optionalZone.get());
+            return "update-zone"; // Thymeleaf template
+        } else {
+            model.addAttribute("error", "Zone not found with ID: " + zoneId);
+            return "update-park";
         }
-
-        return "update-zone"; // Returns the Thymeleaf template for updating the zone
     }
 
 
-    @PostMapping("/update/zone")
-    public String updateZone(@ModelAttribute("coordinatesDto") CoordinatesDto coordinatesDto, Model model) {
+    @PostMapping("/update/zone/{zoneId}")
+    public String updateZone(
+            @PathVariable Long zoneId,
+            @ModelAttribute("zone") Zone zoneDetails,
+            RedirectAttributes redirectAttributes) {
+
+        Date currentDate = new Date();
+        // Fetch the existing zone
+        Optional<Zone> optionalZone = zoneService.findById(zoneId);
+        if (optionalZone.isPresent()) {
+            Zone existingZone = optionalZone.get();
+
+            // Update the zone fields with the provided details
+            existingZone.setUpdatedAt(currentDate);
+            existingZone.setTotalSpots(zoneDetails.getTotalSpots());
+            existingZone.setAvailableSpots(zoneDetails.getAvailableSpots());
+            existingZone.setPrice(zoneDetails.getPrice());
+
+            // Save the updated zone
+            zoneService.saveZone(existingZone);
+
+            // Add success message
+            redirectAttributes.addFlashAttribute("success", "Zone updated successfully!");
+            return "redirect:/admin"; // Redirect to admin page or another appropriate page
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Zone not found with ID: " + zoneId);
+            return "redirect:/update/zone/" + zoneId; // Redirect back to the update form
+        }
+    }
+
+    @GetMapping("/delete")
+    public String showDeleteForm(Model model) {
+        model.addAttribute("coordinatesDto", new CoordinatesDto());
+        return "delete-park"; // A form to enter latitude and longitude
+    }
 
 
+    @PostMapping("/delete")
+    public String processDeleteForm(@ModelAttribute("coordinatesDto") CoordinatesDto coordinatesDto, Model model) {
         double latitude = coordinatesDto.getLatitude();
         double longitude = coordinatesDto.getLongitude();
 
-        Date currentDate = new Date();
-        try {
-            Zone zone = zoneService.findByLatitudeAndLongitude(latitude, longitude)
-                    .orElseThrow(() -> new IllegalArgumentException("Zone not found"));
+        // Check if the zone exists
+        Optional<Zone> optionalZone = zoneService.findByLatitudeAndLongitude(latitude, longitude);
 
-            // Update zone details
-            zone.setTotalSpots(zone.getTotalSpots());
-            zone.setAvailableSpots(zone.getAvailableSpots());
-            zone.setUpdatedAt(currentDate);
-            zoneService.saveZone(zone);
-
-            return "redirect:/admin"; // Redirect to the admin page on success
-        } catch (Exception e) {
-            model.addAttribute("error", "An unexpected error occurred. Please try again.");
-            return "update-zone"; // Stay on the update page in case of error
+        if (optionalZone.isPresent()) {
+            // Add the zone to the model and redirect to the update zone page
+            model.addAttribute("zone", optionalZone.get());
+            return "delete-confirmation"; // Page for updating the zone
+        } else {
+            // Add error message and reload the form
+            model.addAttribute("error", "Zone with specified coordinates not found.");
+            return "delete-park";
         }
+    }
+
+    @GetMapping("/delete/zone/{zoneId}")
+    public String showDeleteConfirmation(@PathVariable Long zoneId, Model model) {
+        Optional<Zone> optionalZone = zoneService.findById(zoneId);
+        if (optionalZone.isPresent()) {
+            model.addAttribute("zone", optionalZone.get());
+            return "delete-confirmation"; // Thymeleaf template for delete confirmation
+        } else {
+            model.addAttribute("error", "Zone not found with ID: " + zoneId);
+            return "redirect:/admin"; // Redirect back to admin if the zone doesn't exist
+        }
+    }
+
+    @PostMapping("/delete/zone/{zoneId}")
+    public String deleteZone(@PathVariable Long zoneId, RedirectAttributes redirectAttributes) {
+        Optional<Zone> optionalZone = zoneService.findById(zoneId);
+        if (optionalZone.isPresent()) {
+            zoneService.deleteZone(zoneId); // Assume `deleteZone` is implemented in `ZoneService`
+            redirectAttributes.addFlashAttribute("success", "Zone deleted successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Zone not found with ID: " + zoneId);
+        }
+        return "redirect:/admin"; // Redirect back to the admin page
     }
 
 

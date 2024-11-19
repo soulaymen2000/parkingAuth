@@ -31,4 +31,5 @@ public class ZoneService {
 
     public Optional<Zone> findByLatitudeAndLongitude(double latitude, double longitude) {return zoneRepository.findByLatitudeAndLongitude(latitude, longitude);}
 
+    public Optional<Zone> findById(Long zoneId) {return zoneRepository.findById(zoneId);}
 }
