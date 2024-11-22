@@ -33,9 +33,15 @@ public class SecurityConfiguration {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF protection for stateless APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/signup").permitAll()
+                        .requestMatchers("/auth/logout").permitAll()
+                        .requestMatchers("/auth/profile/edit").permitAll()
                         .requestMatchers("/landing").permitAll()
-                        .requestMatchers("/admin/**").hasAuthority("ADMIN")// Only ADMIN can access these endpoints
+                        .requestMatchers("/auth/create/**").hasAuthority("ADMIN")
+                        .requestMatchers("/auth/update /**").hasAuthority("ADMIN")
+                        .requestMatchers("/auth/delete/**").hasAuthority("ADMIN")
+                        .requestMatchers("/admin").hasAuthority("ADMIN")// Only ADMIN can access these endpoints
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated() // Require authentication for all other requests
                 )

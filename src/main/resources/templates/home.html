@@ -4,8 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Dashboard - Parking</title>
-  <script src="https://maps.gomaps.pro/maps/api/js?key=AlzaSyoHzeVrEcTuZehYbvYwJegoAgjhO5aCppn"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine -->
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
   <style>
     #map {
       height: 500px;
@@ -14,17 +26,21 @@
     .widget {
       display: none;
       position: absolute;
-      top: 100px;
+      top: 150px; /* Adjust to move the widget lower if it overlaps */
       left: 50px;
+      width: 300px; /* Optional: Add a fixed width for better layout */
       background-color: white;
       padding: 20px;
       border: 1px solid #ccc;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 100;
+      z-index: 1000; /* Ensure it's above the map */
+      border-radius: 5px;
     }
+
     .widget.active {
       display: block;
     }
+
     .btn-disabled {
       pointer-events: none;
       opacity: 0.6;
@@ -94,22 +110,20 @@
 
   // Initialize the map
   function initMap() {
-    const defaultCenter = { lat: 36.8065, lng: 10.1815 }; // Tunis coordinates
-    map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 14,
-      center: defaultCenter,
-    });
+    const defaultCenter = [36.8065, 10.1815]; // Tunis coordinates
+    map = L.map('map').setView(defaultCenter, 14);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
 
     fetchZones().then(zones => {
       zones.forEach(zone => {
-        const zoneLocation = { lat: zone.latitude, lng: zone.longitude };
-        const marker = new google.maps.Marker({
-          position: zoneLocation,
-          map: map,
-          title: zone.description,
-        });
+        const marker = L.marker([zone.latitude, zone.longitude]).addTo(map);
+        marker.bindPopup(zone.description);
 
-        google.maps.event.addListener(marker, 'click', function () {
+        marker.on('click', () => {
           selectedZone = zone;
           document.getElementById('widget').classList.add('active');
           document.getElementById('zone-description').innerText = `Description: ${zone.description}`;
@@ -129,78 +143,93 @@
     });
 
     if (navigator.geolocation) {
+      // Fetch and display user's current location
       navigator.geolocation.getCurrentPosition(
-              position => {
-                userLocation = {
-                  lat: position.coords.latitude,
-                  lng: position.coords.longitude,
-                };
-                map.setCenter(userLocation);
-                new google.maps.Marker({
-                  position: userLocation,
-                  map: map,
-                  title: 'Your Location',
-                  icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 7,
-                    fillColor: '#4285F4',
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                  },
-                });
+              function (position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+
+                // Add a circle to represent the user's location
+                const userCircle = L.circle([userLat, userLng], {
+                  color: 'blue', // Circle border color
+                  fillColor: 'blue', // Fill color of the circle
+                  fillOpacity: 0.5, // Transparency
+                  radius: 100, // Radius in meters
+                }).addTo(map);
+
+                // Save user's location globally for further use
+                userLocation = { lat: userLat, lng: userLng };
+
+                // Center the map on the user's location
+                map.setView([userLat, userLng], 15);
               },
-              () => {
-                console.log('Geolocation service failed.');
-              }
+              function (error) {
+                console.error('Geolocation error:', error.message);
+                alert('Failed to get your location. Please enable location services and refresh the page.');
+              },
+              { enableHighAccuracy: true }
       );
+
+
     }
   }
 
   // Reserve and generate route
   document.getElementById('reserve-button').addEventListener('click', async function () {
-    if (!selectedZone || !userLocation) return;
+    if (!selectedZone || !userLocation) {
+      alert('No zone selected or location unavailable.');
+      return;
+    }
 
     try {
+      // Send reservation request to the backend
       const response = await fetch('http://localhost:1234/api/zones/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: selectedZone.description }),
       });
 
+      // Check for failed response
       if (!response.ok) {
-        throw new Error('Failed to reserve spot');
+        let errorMessage = 'Failed to reserve spot.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // Fallback to generic error
+        }
+        throw new Error(errorMessage);
       }
 
+      // Parse successful response
       const updatedZone = await response.json();
       document.getElementById('zone-available-spots').innerText = `Available Spots: ${updatedZone.availableSpots}`;
       selectedZone.availableSpots = updatedZone.availableSpots;
 
       if (updatedZone.availableSpots === 0) {
-        document.getElementById('reserve-button').classList.add('btn-disabled');
-        document.getElementById('reserve-button').disabled = true;
+        const reserveButton = document.getElementById('reserve-button');
+        reserveButton.classList.add('btn-disabled');
+        reserveButton.disabled = true;
       }
 
       alert('Reservation successful!');
 
-      const directionsService = new google.maps.DirectionsService();
-      const directionsRenderer = new google.maps.DirectionsRenderer();
-      directionsRenderer.setMap(map);
+      // Clear previous routes, if any
+      if (window.routingControl) {
+        map.removeControl(window.routingControl);
+      }
 
-      directionsService.route(
-              {
-                origin: userLocation,
-                destination: { lat: selectedZone.latitude, lng: selectedZone.longitude },
-                travelMode: google.maps.TravelMode.DRIVING,
-              },
-              (result, status) => {
-                if (status === google.maps.DirectionsStatus.OK) {
-                  directionsRenderer.setDirections(result);
-                } else {
-                  alert('Could not display route: ' + status);
-                }
-              }
-      );
+      // Add a route to the map
+      window.routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(userLocation.lat, userLocation.lng), // User's location
+          L.latLng(selectedZone.latitude, selectedZone.longitude), // Zone's location
+        ],
+        routeWhileDragging: true,
+      }).addTo(map);
 
+      // Generate and download the reservation PDF
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.text('Reservation Details', 10, 10);
@@ -211,14 +240,11 @@
 
       document.getElementById('widget').classList.remove('active');
     } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to reserve spot.');
+      console.error('Error:', error.message);
+      alert(`An unexpected error occurred: ${error.message}`);
     }
   });
 
-  document.getElementById('close-button').addEventListener('click', function () {
-    document.getElementById('widget').classList.remove('active');
-  });
 
   window.onload = initMap;
 </script>

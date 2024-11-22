@@ -6,6 +6,25 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="#">Parking</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/auth/profile/edit}" href="#">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <form action="#" th:action="@{/auth/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="nav-link btn btn-link">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 <div class="container mt-5">
     <h2 class="mb-4">Update Zone</h2>
 
