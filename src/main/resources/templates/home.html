@@ -130,6 +130,7 @@
           document.getElementById('zone-price').innerText = `Price: ${zone.price} TND`;
           document.getElementById('zone-total-spots').innerText = `Total Spots: ${zone.totalSpots}`;
           document.getElementById('zone-available-spots').innerText = `Available Spots: ${zone.availableSpots}`;
+
           const reserveButton = document.getElementById('reserve-button');
           if (zone.availableSpots > 0) {
             reserveButton.classList.remove('btn-disabled');

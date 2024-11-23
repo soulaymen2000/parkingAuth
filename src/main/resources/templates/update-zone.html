@@ -62,10 +62,14 @@
 <script>
     function updateSpots(amount) {
         const availableSpotsInput = document.getElementById('availableSpots');
+        const totalSpotsInput = document.getElementById('totalSpots');
         let currentValue = parseInt(availableSpotsInput.value) || 0;
         currentValue += amount;
         if (currentValue >= 0) {
             availableSpotsInput.value = currentValue;
+        }
+        if (currentValue >= totalSpotsInput.value) {
+            availableSpotsInput.value = totalSpotsInput.value;
         }
     }
 </script>
