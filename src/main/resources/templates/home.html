@@ -176,6 +176,12 @@
     }
   }
 
+  // Close button functionality
+  document.getElementById('close-button').addEventListener('click', function () {
+    document.getElementById('widget').classList.remove('active');
+  });
+
+
   // Reserve and generate route
   document.getElementById('reserve-button').addEventListener('click', async function () {
     if (!selectedZone || !userLocation) {
