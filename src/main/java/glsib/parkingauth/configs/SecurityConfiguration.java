@@ -15,7 +15,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity(debug = false)
+@EnableWebSecurity(debug = true) // Enable debug mode temporarily for troubleshooting
 public class SecurityConfiguration {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -33,23 +33,18 @@ public class SecurityConfiguration {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF protection for stateless APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/auth/signup").permitAll()
-                        .requestMatchers("/auth/logout").permitAll()
-                        .requestMatchers("/auth/profile/edit").permitAll()
-                        .requestMatchers("/landing").permitAll()
-                        .requestMatchers("/auth/create/**").hasAuthority("ADMIN")
-                        .requestMatchers("/auth/update /**").hasAuthority("ADMIN")
-                        .requestMatchers("/auth/delete/**").hasAuthority("ADMIN")
-                        .requestMatchers("/admin").hasAuthority("ADMIN")// Only ADMIN can access these endpoints
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/logout").permitAll()
+                        .requestMatchers("/auth/profile/edit", "/landing").permitAll()
+                        .requestMatchers("/auth/create/**", "/auth/update/**", "/auth/delete/**", "/admin").hasAuthority("ADMIN")
+                        .requestMatchers("/api/zones").permitAll() // Allow public access to /api/zones
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated() // Require authentication for all other requests
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Set to stateless
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless sessions
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Ensure JWT filter is applied
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
         return http.build();
     }
@@ -57,15 +52,13 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(List.of("http://localhost:5500")); // Add your local server's URL (unique)
+        configuration.setAllowedOrigins(List.of("*")); // Allow all origins for testing
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); // Specify allowed methods
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
         configuration.setAllowCredentials(true); // Allow credentials
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply configuration globally
-
+        source.registerCorsConfiguration("/**", configuration); // Apply globally
         return source;
     }
 }
